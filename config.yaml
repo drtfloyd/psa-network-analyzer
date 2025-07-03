@@ -1,0 +1,88 @@
+# -----------------------------------------------------------------------------
+# PSA Network Analyzer™ Configuration File (Patched Version)
+# -----------------------------------------------------------------------------
+# This file controls all the scoring logic, column mapping, and persona rules.
+# This patched version includes more scoring factors for richer analysis.
+
+# --- 1. Column Mapping ---
+# Maps the column names from your input CSV to the standardized names the app uses.
+column_mapping:
+  # FIX: Corrected indentation for all mappings.
+  First Name: 'First Name'
+  Last Name: 'Last Name'
+  Company: 'Company'
+  Position: 'Position'
+  Connected On: 'Connected_On'
+  # --- ADD NEW MAPPINGS FOR RICHER DATA ---
+  # To use these, you must add these columns to your CSV file.
+  # Mutual Connections: 'Mutual_Connections' # Example from some data sources
+  Relevance: 'Relevance_Score' # Example of a manual score you add (1-100)
+
+# --- 2. Trust Score Parameters ---
+# Defines how the 'Trust_Score' is calculated.
+# The weights should ideally sum to 1.0.
+trust_score_parameters:
+  weights:
+    # I've adjusted the weights to be more balanced.
+    # The scoring now considers how recent a connection is and its relevance.
+    Days_Since_Connection: 0.5
+    Relevance_Score: 0.5
+    # Uncomment the line below if you add this column to your CSV.
+    # Mutual_Connections: 0.3
+
+# --- 3. Composite Score Weights ---
+# Defines the final 'Composite_Score'. For now, it's just the Trust_Score.
+composite_score_weights:
+  Trust_Score: 1.0
+
+# --- 4. Action Tiers & Labels ---
+# Defines the score thresholds for each recommended action.
+thresholds:
+  keep: 80
+  cultivate: 60
+  nurture: 40
+  monitor: 20
+
+# Human-readable labels for the action tiers.
+action_labels:
+  keep: "✅ Keep"
+  cultivate: "🌱 Cultivate"
+  nurture: "💧 Nurture"
+  monitor: "👀 Monitor"
+  withdraw: "❌ Archive / Withdraw"
+
+# --- 5. Persona Rules ---
+# I've added more complex rules to demonstrate the power of personas.
+persona_rules:
+  "Key Ally":
+    - column: "Trust_Score"
+      operator: ">="
+      value: 80
+    - column: "Recommended_Action"
+      operator: "in"
+      value: "Keep" # Checks for the word "Keep" in "✅ Keep"
+  "Rising Star":
+    - column: "Days_Since_Connection"
+      operator: "<"
+      value: 180 # Connected in the last 6 months
+    - column: "Trust_Score"
+      operator: ">="
+      value: 50
+  "Ghost":
+    - column: "Days_Since_Connection"
+      operator: ">"
+      value: 730 # More than 2 years since connecting
+    - column: "Trust_Score"
+      operator: "<"
+      value: 30
+      
+  # FIX: Split "Domain Expert" into two separate personas to achieve OR logic.
+  "Director-Level":
+    - column: "Position"
+      operator: "in"
+      value: "Director"
+
+  "VP-Level":
+    - column: "Position"
+      operator: "in"
+      value: "VP"
